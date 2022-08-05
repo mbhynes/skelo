@@ -1,0 +1,4 @@
+.venv
+skelo.egg-info
+dist/*
+*.pyc

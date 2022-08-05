@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+source $(dirname $0)/../dev
+
+REQUIRES=(ROOT_DIR)
+check_requires ${REQUIRES[@]}
+
+python3 -m venv .venv
+source $ROOT_DIR/.venv/bin/activate
+pytest $@

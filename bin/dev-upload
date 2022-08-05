@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+source $(dirname $0)/../dev
+
+REQUIRES=(ROOT_DIR)
+check_requires ${REQUIRES[@]}
+
+python3 -m venv .venv
+source $ROOT_DIR/.venv/bin/activate || die "Could not source the venv in $PWD/.venv"
+
+python3 -m pip install --upgrade twine || die "Could not install twine"
+python3 -m build
+
+if [[ "$1" == '--test' ]]; then
+  repository=testpypi
+else
+  repository=pypi
+fi
+
+python3 -m twine upload --repository "$repository" dist/*
+exit $?

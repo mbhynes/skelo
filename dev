@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+SCRIPT_NAME=$(basename $0)
+
+DEV_SUBCOMMANDS=(
+  'up'
+  'shell'
+  'test'
+  'package'
+  'upload'
+)
+
+log() {
+  echo "$SCRIPT_NAME: $(date): INFO: $*" 1>&2
+}
+error() {
+  echo "$SCRIPT_NAME: $(date): ERROR: $*" 1>&2
+}
+die() {
+  error "$*"
+  exit 1
+}
+
+check_requires() {
+  log "Running $SCRIPT_NAME with env:"
+  for r in $@; do
+    if ! printenv "$r" > /dev/null; then
+      die "Could not find required env var: '$r'"
+    fi
+    echo "   $r=$(printenv $r)" 1>&2
+  done
+
+}
+
+export_env() {
+  git_branch="$(git branch --show)"
+  if [ -z "$git_branch" ]; then
+    die "HEAD is not attached. Please checkout a valid branch." 1>&2
+    exit 1
+  fi
+  export ROOT_DIR=$(dirname $SCRIPT_NAME)
+  export TARGET_ENV="$git_branch"
+}
+
+run() {
+  if [ -z "$1" ] || [[ "$1" == 'help' ]]; then
+    echo "Usage: $SCRIPT_NAME [${DEV_SUBCOMMANDS[@]}]"
+  else
+    export_env
+    script="$ROOT_DIR/bin/dev-$1"
+    if [ -x "$script" ]; then
+      shift
+      "$script" $*
+    else
+      die "Provided subcommand: '$1' is not valid; no executable script $script"
+    fi
+  fi
+  return $?
+}
+
+# Only run & exit if this script is called directly; run & exit will
+# not be called if dev is being sourced with '.' or 'source'
+if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
+  run $*
+  exit $?
+fi
