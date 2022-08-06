@@ -85,7 +85,7 @@ ts_est.loc[:, idx].plot()
 ```
 
 This should result in a figure like the one below, showing the 5 highest ranked (within the Elo system) players based on this subset of ATP matches:
-![Top ATP Player Ratings, 1979-1980](examples/ratings_convergence.png)
+![Top ATP Player Ratings, 1979-1980](examples/atp_1979.png)
 
 
 ## Developer Guide
