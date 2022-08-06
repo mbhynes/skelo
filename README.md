@@ -41,7 +41,7 @@ ratings_est = model.elo.to_frame()
 ts_est = ratings_est.pivot_table(index='valid_from', columns='key', values='rating')
 ts_est.plot()
 ```
-![Convergence of Synthetic Ratings](examples/ratings_convergence.png | width=75)
+![Convergence of Synthetic Ratings](examples/ratings_convergence.png)
 
 The estimated ratings will exhibit convergence profiles (players with extremal low or high ratings take longer to converge).
 Please note that while the actual original ratings are unlikely to be determined by the fitting procedure, the *relative* difference between the ratings should be preserved, within the noise band of the chosen value of `k` (by default: 20)
@@ -85,7 +85,7 @@ ts_est.loc[:, idx].plot()
 ```
 
 This should result in a figure like the one below, showing the 5 highest ranked (within the Elo system) players based on this subset of ATP matches:
-![Top ATP Player Ratings, 1979-1980](examples/ratings_convergence.png | width=75)
+![Top ATP Player Ratings, 1979-1980](examples/ratings_convergence.png)
 
 
 ## Developer Guide
