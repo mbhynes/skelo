@@ -41,7 +41,7 @@ ratings_est = model.elo.to_frame()
 ts_est = ratings_est.pivot_table(index='valid_from', columns='key', values='rating')
 ts_est.plot()
 ```
-[Synthetic Ratings Convergence](examples/ratings_convergence.png)
+![Convergence of Synthetic Ratings](examples/ratings_convergence.png)
 
 
 The estimated ratings will exhibit convergence profiles (players with extremal low or high ratings take longer to converge).
