@@ -343,6 +343,12 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
     self.key1_field = key1_field
     self.key2_field = key2_field
     self.timestamp_field = timestamp_field
+    if any([key1_field, key2_field, timestamp_field]):
+      if not all([key1_field, key2_field, timestamp_field]):
+        raise ValueError(
+          f"All fields (key1_field, key2_field, timestamp_field) must be provided to fit using a DataFrame."
+        )
+    self._can_transform_dataframe = (key1_field is not None)
     self._fit = False
 
   def fit(self, X, y):
@@ -358,7 +364,13 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
     """
     self._fit = True
     if type(X) is pd.DataFrame:
-      x = X[[self.key1_field, self.key2_field, self.timestamp_field]].values
+      if self._can_transform_dataframe:
+        x = X[[self.key1_field, self.key2_field, self.timestamp_field]].values
+      else:
+        logger.warning(
+          f"Attempting to transform a dataframe without attributes [key1_field, key2_field, timestamp_field]; using columns [0, 1, 2]"
+        )
+        x = X.iloc[:, :3].values
     else:
       x = X
     if type(y) is pd.DataFrame:
@@ -412,23 +424,29 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
         provided timestamp exactly matches a match timestamp
 
     Returns:
-      An ndarry or DataFrame of transformed ratings or probabilities.
+      An ndarry or pandas Series of transformed ratings or probabilities.
     """
     allowed_output_types = ['prob', 'rating']
     assert output_type in allowed_output_types, f"output_type must be one of: {allowed_output_types}"
     assert self._fit, ".fit() has not been called on this model."
     dtype = type(X)
     if dtype is pd.DataFrame:
-      x = X[[self.key1_field, self.key2_field, self.timestamp_field]].values
+      if self._can_transform_dataframe:
+        x = X[[self.key1_field, self.key2_field, self.timestamp_field]].values
+      else:
+        logger.warning(
+          f"Attempting to transform a dataframe without attributes [key1_field, key2_field, timestamp_field]; using columns [0, 1, 2]"
+        )
+        x = X.iloc[:, :3].values
     else:
       x = X
     if output_type == 'prob':
       transformed = np.array(
-        self.elo.predict_proba(x[:, 0], x[:, 1], x[:, -1], strict_past_data=strict_past_data)
+        self.elo.predict_proba(x[:, 0], x[:, 1], x[:, 2], strict_past_data=strict_past_data)
       )
     else:
       transformed = np.array(
-        self.elo.transform(x[:, 0], x[:, 1], x[:, -1], strict_past_data=strict_past_data)
+        self.elo.transform(x[:, 0], x[:, 1], x[:, 2], strict_past_data=strict_past_data)
       )
 
     if dtype is pd.DataFrame and output_type == 'prob':
@@ -447,34 +465,20 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
   def predict_proba(self, X):
     """
     Predict the probability of of player 1 defeating player 2 for player identifiers in 
-    the provided design matrix in *future* matches, using *only* the latest available
-    rating for each player after the model has been fit. 
+    the provided design matrix using strict past data for each prediction.
 
     Args:
       X (numpy.ndarray or pandas DataFrame): design matrix of matches with key1, key2, timestamp data
 
     Returns:
-      An ndarry or DataFrame of the probability of victory for player 1.
+      An ndarry or pandas DataFrame of the probabilities of victory for player 1 and 2, respectively.
     """
-    assert self._fit, ".fit() has not been called on this model."
-    dtype = type(X)
-    if dtype is pd.DataFrame:
-      index = X.index
-      columns = X.columns
-      x = X[[self.key1_field, self.key2_field]].values
+    pr = self.transform(X, output_type='prob', strict_past_data=True)
+    pr_inv = 1 - pr
+    if type(pr) is pd.Series:
+      return pd.concat([pr.rename('pr1'), pr_inv.rename('pr2')], axis=1)
     else:
-      x = X
-    prob_u1 = np.array(self.elo.predict_proba(x[:, 0], x[:, 1], strict_past_data=True))
-    prob_u2 = 1 - prob_u1
-    y_pred = np.concatenate([prob_u1.reshape(-1, 1), prob_u2.reshape(-1, 1)], axis=1)
-    if dtype is pd.DataFrame:
-      return pd.DataFrame(
-        index=X.index,
-        columns=[0, 1],
-        data=y_pred,
-      )
-    else:
-      return y_pred
+      return np.c_[pr, pr_inv]
 
   def predict(self, X):
     """
@@ -488,5 +492,7 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
     Returns:
       An ndarry or DataFrame of predicted labels of victory for player 1.
     """
-    prob = self.predict_proba(X)
-    return np.round(prob)[:, 0]
+    labels = np.round(self.predict_proba(X))
+    if type(labels) is pd.DataFrame:
+      return labels.iloc[:, 0]
+    return labels[:, 0]

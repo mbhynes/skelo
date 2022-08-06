@@ -127,22 +127,22 @@ class TestEloEstimator:
   def test_fit_ndarray(self):
     num_players = 4
     ratings = data_utils.generate_constant_ratings(num_players=num_players, sigma=40)
-    games = pd.DataFrame(data_utils.generate_constant_game_outcomes(ratings, num_timesteps=10))
+    games = pd.DataFrame(data_utils.generate_constant_game_outcomes(ratings, num_timesteps=100))
     X = games.values[:, :3] # key1, key2, timestamp
     y = games.values[:, -1] # outcome
     estimator = EloEstimator().fit(X, y)
     for p in range(num_players):
       fit_rating = estimator.elo.get(p, timestamp=None)['rating']
-      assert np.abs(fit_rating - ratings[p]) < 1.6 * estimator.elo.default_k
+      assert np.abs(fit_rating - ratings[p]) < estimator.elo.default_k
 
   def test_fit_dataframe(self):
     num_players = 4
     ratings = data_utils.generate_constant_ratings(num_players=num_players, sigma=40)
-    games = pd.DataFrame(data_utils.generate_constant_game_outcomes(ratings, num_timesteps=10))
+    games = pd.DataFrame(data_utils.generate_constant_game_outcomes(ratings, num_timesteps=100))
     estimator = EloEstimator('p1', 'p2', 'match_at').fit(games, games['label'])
     for p in range(num_players):
       fit_rating = estimator.elo.get(p, timestamp=None)['rating']
-      assert np.abs(fit_rating - ratings[p]) < 1.6 * estimator.elo.default_k
+      assert np.abs(fit_rating - ratings[p]) < estimator.elo.default_k
 
   def test_transform_dataframe(self):
     num_players = 2
@@ -188,7 +188,6 @@ class TestEloEstimator:
 
   def test_predict_proba_dataframe(self):
     num_players = 2
-    ratings = np.array([1600, 1400])
     games = pd.DataFrame({
       'p1': [1],
       'p2': [2],
@@ -196,14 +195,13 @@ class TestEloEstimator:
       'label': [1],
     })
     estimator = EloEstimator('p1', 'p2', 'match_at').fit(games, games['label'])
-    y_pred = estimator.predict_proba(np.array([[1, 2], [2, 1]]))
+    y_pred = estimator.predict_proba(np.array([[1, 2, 2], [1, 2, 3], [2, 1, 3]]))
 
-    pr = 1.0 / (1 + 10**((1490 - 1510) / 400.0))
-    assert np.allclose(y_pred, np.array([[pr, 1 - pr], [1 - pr, pr]]))
+    pr = EloModel.compute_prob(1510, 1490)
+    assert np.allclose(y_pred, np.array([[0.5, 0.5], [pr, 1 - pr], [1 - pr, pr]]))
 
   def test_predict_proba_ndarray(self):
     num_players = 2
-    ratings = np.array([1600, 1400])
     games = pd.DataFrame({
       'p1': [1],
       'p2': [2],
@@ -212,8 +210,8 @@ class TestEloEstimator:
     })
     X = games.values[:, :3] # key1, key2, timestamp
     y = games.values[:, -1] # outcome
-    estimator = EloEstimator('p1', 'p2', 'match_at').fit(X, y)
-    y_pred = estimator.predict_proba(np.array([[1, 2], [2, 1]]))
+    estimator = EloEstimator().fit(X, y)
+    y_pred = estimator.predict_proba(np.array([[1, 2, 2], [1, 2, 3], [2, 1, 3]]))
 
-    pr = 1.0 / (1 + 10**((1490 - 1510) / 400.0))
-    assert np.allclose(y_pred, np.array([[pr, 1 - pr], [1 - pr, pr]]))
+    pr = EloModel.compute_prob(1510, 1490)
+    assert np.allclose(y_pred, np.array([[0.5, 0.5], [pr, 1 - pr], [1 - pr, pr]]))

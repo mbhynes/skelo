@@ -42,7 +42,11 @@ def generate_ratings(num_players, num_timesteps, mu=1500, sigma=1, seed=1):
   assert type(num_players) is int and num_players > 0
   assert type(num_timesteps) is int and num_timesteps > 0
   np.random.seed(seed)
-  return np.maximum(0, mu + sigma * np.random.normal(size=(num_players, num_timesteps)).cumsum(axis=1))
+  drift = sigma * np.random.normal(size=(num_players, num_timesteps)).cumsum(axis=1)
+  # Remove the mean of the noise from the first timestamp,
+  # such that the initial ratings have a mean of mu.
+  centered_drift = drift - drift.mean(axis=0)[0]
+  return np.maximum(0, mu + centered_drift)
 
 def generate_game_outcomes(ratings, seed=1):
   """
