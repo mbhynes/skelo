@@ -41,11 +41,51 @@ ratings_est = model.elo.to_frame()
 ts_est = ratings_est.pivot_table(index='valid_from', columns='key', values='rating')
 ts_est.plot()
 ```
-![Convergence of Synthetic Ratings](examples/ratings_convergence.png)
-
+![Convergence of Synthetic Ratings](examples/ratings_convergence.png | width=75)
 
 The estimated ratings will exhibit convergence profiles (players with extremal low or high ratings take longer to converge).
 Please note that while the actual original ratings are unlikely to be determined by the fitting procedure, the *relative* difference between the ratings should be preserved, within the noise band of the chosen value of `k` (by default: 20)
+
+### Example Tennis Ranking
+
+```python
+import numpy as np
+import pandas as pd
+from skelo.model.elo import EloEstimator
+
+# Download a dataframe of example tennis data from JeffSackmann's ATP match repository (thanks Jeff!)
+df = pd.concat([
+  pd.read_csv("https://raw.githubusercontent.com/JeffSackmann/tennis_atp/master/atp_matches_1979.csv"),
+  pd.read_csv("https://raw.githubusercontent.com/JeffSackmann/tennis_atp/master/atp_matches_1980.csv"),
+], axis=0)
+# Do some simple munging to get a date and a match outcome label
+df["tourney_date"] = pd.to_datetime(df['tourney_date'], format='%Y%m%d')
+df["label"] = 1
+
+player_counts = pd.concat([df["winner_name"], df["loser_name"]], axis=0).value_counts()
+players = player_counts[player_counts > 5].index
+mask = (df["winner_name"].isin(players) & df["loser_name"].isin(players))
+X = df.loc[mask]
+
+# Create a model to fit on a dataframe.
+# Since our match data has np.datetime64 timestamps, we specify an initial time explicitly
+model = EloEstimator(
+  key1_field="winner_name",
+  key2_field="loser_name",
+  timestamp_field="tourney_date",
+  initial_time=np.datetime64('1979', 'Y'),
+).fit(X, X["label"])
+
+#  Retrieve the fitted Elo ratings from the model
+ratings_est = model.elo.to_frame()
+ts_est = ratings_est.pivot_table(index='valid_from', columns='key', values='rating').ffill()
+
+idx = ts_est.iloc[-1].sort_values().index[-5:]
+ts_est.loc[:, idx].plot()
+```
+
+This should result in a figure like the one below, showing the 5 highest ranked (within the Elo system) players based on this subset of ATP matches:
+![Top ATP Player Ratings, 1979-1980](examples/ratings_convergence.png | width=75)
 
 
 ## Developer Guide
