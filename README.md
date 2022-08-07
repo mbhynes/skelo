@@ -306,7 +306,7 @@ results.sort_values('rank_test_score').head(2).T
 The Glicko2 implementation that we wrap has no hyperparameters to tune other than the 3-tuple to provide as the `initial_value` for a player; namely the initial values of the rating, the rating deviation, and the volatility.
 (However the persnickety reader should note there are quite a lot of magic numbers in both the [Glicko](http://www.glicko.net/glicko/glicko.pdf) and [Glicko2](http://www.glicko.net/glicko/glicko2.pdf) papers that should probably constitute hyperparameters---these aren't available to tune simply because the available Glicko{1,2} implementations do not expose an interface that allows for tuning them. Beggars can't be choosers, as they say...)
 
-```
+```python
 import numpy as np
 from skelo.model.glicko2 import Glicko2Estimator
 from sklearn.model_selection import GridSearchCV
@@ -410,7 +410,7 @@ class EloModel(RatingModel):
 
   - Extend the `RatingEstimator` to wrap the new `RatingModel` subclass and specify the list of `RatingModel` attributes that should be considered hyperparamters when dynamically building a `RatingsModel` in the estimator's `fit` method
 
-```
+```python
 class EloEstimator(RatingEstimator):
 
   RATING_MODEL_CLS = EloModel
