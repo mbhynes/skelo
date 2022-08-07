@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 class EloModel(RatingModel):
   """
-  Dictionary-based implementation of the `Elo rating system`<https://en.wikipedia.org/wiki/Elo_rating_system>_.
+  Dictionary-based implementation of the `Elo rating system <https://en.wikipedia.org/wiki/Elo_rating_system>`_.
 
   This class creates a dictionary of Elo ratings for each player inserted into the rating system, such
   that each match update will append new ratings for the respective match players, calculated according
@@ -73,7 +73,7 @@ class EloModel(RatingModel):
 
 class EloEstimator(RatingEstimator):
   """
-  A scikit-learn Classifier implementing the `Elo rating system`<https://en.wikipedia.org/wiki/Elo_rating_system>_.
+  A scikit-learn Classifier implementing the `Elo rating system <https://en.wikipedia.org/wiki/Elo_rating_system>`_.
   """
   RATING_MODEL_CLS = EloModel
   RATING_MODEL_ATTRIBUTES = [

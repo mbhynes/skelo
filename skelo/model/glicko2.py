@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 class Glicko2Model(RatingModel):
   """
-  Dictionary-based implementation of the `Glicko2 rating system`<https://en.wikipedia.org/wiki/Glicko_rating_system>_.
+  Dictionary-based implementation of the `Glicko2 rating system <https://en.wikipedia.org/wiki/Glicko_rating_system>`_.
 
   This class creates a dictionary of Glicko2 ratings for each player inserted into the rating system, such
   that each match update will append new ratings for the respective match players, calculated according
@@ -56,6 +56,12 @@ class Glicko2Model(RatingModel):
     super().__init__(initial_value=initial_value, initial_time=initial_time)
 
   def evolve_rating(self, r1, r2, label):
+    """
+    Update a Glicko rating based on the outcome of a match.
+    
+    This is based on the example in the glicko2 package's unit tests,
+    available `here <https://github.com/deepy/glicko2/blob/master/tests/tests.py>`_
+    """
     rating = glicko2.Player(*r1)
     rating.update_player([r2[0]], [r2[1]], [label])
     updated = (rating.getRating(), rating.getRd(), rating.vol)
@@ -66,7 +72,7 @@ class Glicko2Model(RatingModel):
     """
     Return the probability of a player with rating r1 beating a player with rating r2.
 
-    For more background, please see the `Glicko Paper`<http://glicko.net/glicko/glicko.pdf>_
+    For more background, please see the `Glicko Paper <http://glicko.net/glicko/glicko.pdf>`_
     """
     r_diff = (r2[0] - r1[0]) / 400.0
     root_square_std = np.sqrt(r1[1]**2 + r2[1]**2)
@@ -79,7 +85,7 @@ class Glicko2Model(RatingModel):
 class Glicko2Estimator(RatingEstimator):
   """
   A scikit-learn Classifier for creating ratings according to the 
-  `Glicko2 rating system`<https://en.wikipedia.org/wiki/Glicko_rating_system>_.
+  `Glicko2 rating system <https://en.wikipedia.org/wiki/Glicko_rating_system>`_.
   """
   RATING_MODEL_CLS = Glicko2Model
   RATING_MODEL_ATTRIBUTES = [

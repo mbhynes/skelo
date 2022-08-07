@@ -10,8 +10,10 @@ It's intended to provide a simple API for creating elo ratings in a small games 
 What problem does this package solve?
 
 Despite there being many ratings systems implementations available (e.g. [sublee/elo](https://github.com/sublee/elo/) [ddm7018/Elo](https://github.com/ddm7018/Elo), [rshk/elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills), [pyglicko2](https://github.com/ryankirkman/pyglicko2), [glicko](https://github.com/sublee/glicko)) it's hard to find one that satisfies several criteria for ease of use:
-  - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn estimator [interface](https://scikit-learn.org/stable/modules/classes.html) is the *de facto* standard
+  - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn estimator [interface](https://scikit-learn.org/stable/modules/classes.html) is the *de facto* standard for this use case
   - Explicit management of intervals of validity for ratings, such that as matches occur a timeseries of ratings is evolved for each players (i.e. type-2 data management as opposed to type-1 fire-and-forget ratings)
+
+This package addresses the criteria above by providing a simple interface for storing the 
 
 ## Installation
 

@@ -174,12 +174,12 @@ class RatingModel(object):
     r2 = self.get(loser)
     if timestamp < r1['valid_from']:
       raise ValueError(
-        f"Attempted to retrospectively update a rating for {winnder} at timestamp '{timestamp}' "
+        f"Attempted to retrospectively update a rating for {winner} at timestamp '{timestamp}' "
         f"which is earlier than the latest available rating at timestamp '{r1['valid_from']}'"
       )
     if timestamp < r2['valid_from']:
       raise ValueError(
-        f"Attempted to retrospectively update a rating for {winnder} at timestamp '{timestamp}' "
+        f"Attempted to retrospectively update a rating for {loser} at timestamp '{timestamp}' "
         f"which is earlier than the latest available rating at timestamp '{r2['valid_from']}'"
       )
     r1['valid_to'] = timestamp
@@ -360,7 +360,10 @@ class RatingEstimator(BaseEstimator, ClassifierMixin):
     Args:
       X (numpy.ndarray or pandas DataFrame): design matrix of matches with key1, key2, timestamp data
       y (numpy.ndarray or pandas DataFrame): vector of match outcomes, where 1 denotes player key1 won
-
+      incremental_fit (bool): if false, subsequent calls to fit refit the model and discard old ratings.
+        If True, else the model's ratings may be incrementally updated with (new) training data.
+        When fitting incrementally, ensure that all matches for any player are monotonically
+        increasing in time.
     Returns:
       EloEstimator: this object
     """
