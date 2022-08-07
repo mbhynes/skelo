@@ -20,14 +20,14 @@ This package addresses the gap above by providing rating system implementations 
 
 ## Installation
 
-- Installation via the PyPI package using pip:
+- Install via the PyPI package using pip:
 ```python
 pip3 install skelo
 ```
 
 ## Quickstart
 
-As a quickstart, we can load and fit an `EloEsimator` (classifier) on some sample tennis data:
+As a quickstart, we can load and fit an `EloEstimator` (classifier) on some sample tennis data:
 ```python
 import numpy as np
 import pandas as pd
@@ -98,7 +98,7 @@ model = EloEstimator(
 Length: 3959, dtype: float64
 ```
 
-- These probabilities are also available using the `predict_proba` or `predict` classifier methods, as shown below. What distinguishes `transform` from `predict_proba` is that `predict_proba` and `predict` return predictions that only use past data (i.e. you cannot cheat by leaking future data into the forecast), while `transform` may be used to compute ratings that "peak" into the future and could return new ratings with updates using a match outcome as of the the match start timestamp, since the match start is typically a more convenient timestamp to index data with
+- These probabilities are also available using the `predict_proba` or `predict` classifier methods, as shown below. What distinguishes `transform` from `predict_proba` is that `predict_proba` and `predict` return predictions that only use past data (i.e. you cannot cheat by leaking future data into the forecast), while `transform(X, strict_past_data=False).` may be used to compute ratings that "peak" into the future and could return new ratings with updates using a match outcome as of the the match start timestamp, since the match start time is typically a more convenient timestamp with which to index and manipulate data.
 ```
 >>> model.predict_proba(df)
 
@@ -142,7 +142,7 @@ The models in this package are the following:
 - [`Glicko2Estimator`](https://github.com/mbhynes/skelo/blob/main/skelo/model/glicko2.py)
   - This class implements the [Glicko2](https://en.wikipedia.org/wiki/Glicko_rating_system) rating system, implemented using a light wrapper around [glicko2](https://github.com/deepy/glicko2)
 
-## Example Usage
+## Extended Usage Examples
 
 ### Synthetic Data
 
