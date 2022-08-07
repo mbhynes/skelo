@@ -128,7 +128,7 @@ class RatingModel(object):
     Args:
       key: identifier for the player
       timestamp: system time at which to retrieve the ratings data
-      strict_past_data (bool): if true, ensure no future data is returned if the
+      strict_past_data (bool): if true, ensure no future data are returned if the
         provided timestamp exactly matches a match timestamp
         
     Returns:
@@ -217,7 +217,7 @@ class RatingModel(object):
       key1: identifier for player 1, or iterable of identifiers
       key2: identifier for player 2, or iterable of identifiers
       timestamp: match time, or iterable of match times
-      strict_past_data (bool): if true, ensure no future data is returned if the
+      strict_past_data (bool): if true, ensure no future data are returned if the
         provided timestamp exactly matches a match timestamp
 
     Returns:
@@ -266,7 +266,7 @@ class RatingModel(object):
       key1: identifier for player 1, or iterable of identifiers
       key2: identifier for player 2, or iterable of identifiers
       timestamp: match time, or iterable of match times
-      strict_past_data (bool): if true, ensure no future data is returned if the
+      strict_past_data (bool): if true, ensure no future data are returned if the
         provided timestamp exactly matches a match timestamp
 
     Returns:
@@ -438,7 +438,7 @@ class RatingEstimator(BaseEstimator, ClassifierMixin):
     Args:
       X (numpy.ndarray or pandas DataFrame): design matrix of matches with key1, key2, timestamp data
       output_type (string): either 'prob' or 'rating' to specify the type of transformation
-      strict_past_data (bool): if true, ensure no future data is returned if the
+      strict_past_data (bool): if true, ensure no future data are returned if the
         provided timestamp exactly matches a match timestamp
 
     Returns:

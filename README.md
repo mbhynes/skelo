@@ -2,48 +2,49 @@
 
 An implementation of the [Elo](https://en.wikipedia.org/wiki/Elo_rating_system) and [Glicko2](https://en.wikipedia.org/wiki/Glicko_rating_system) rating systems with a [scikit-learn](https://scikit-learn.org/stable/)-compatible interface.
 
-The `skelo` package is a simple implementation suitable for small-scale ratings systems that fit into memory on a single machine.
-It's intended to provide a simple API for creating elo ratings in a small games on the scale thousands of players and millions of matches, primarily as a means of feature transformation for inclusion in other `sklearn` pipelines.
+The `skelo` package is a simple implementation suitable for small-scale rating systems that fit into memory on a single machine.
+It's intended to provide a convenient API for creating Elo/Glicko ratings in a data science & analytics workflow for small games on the scale thousands of players and millions of matches, primarily as a means of feature transformation in other `sklearn` pipelines or benchmarking classifier accuracy.
 
 ## Motivation
 
 What problem does this package solve?
 
-Despite there being many ratings system implementations available (e.g. [sublee/elo](https://github.com/sublee/elo/) [ddm7018/Elo](https://github.com/ddm7018/Elo), [rshk/elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills), [pyglicko2](https://github.com/ryankirkman/pyglicko2), [glicko2](https://github.com/deepy/glicko2), [glicko](https://github.com/sublee/glicko)) it's hard to find one that satisfies several criteria:
+Despite there being many rating system implementations available (e.g. [sublee/elo](https://github.com/sublee/elo/) [ddm7018/Elo](https://github.com/ddm7018/Elo), [rshk/elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills), [pyglicko2](https://github.com/ryankirkman/pyglicko2), [glicko2](https://github.com/deepy/glicko2), [glicko](https://github.com/sublee/glicko)) it's hard to find one that satisfies several criteria:
   - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn estimator [interface](https://scikit-learn.org/stable/modules/classes.html) is the *de facto* standard
   - Explicit management of intervals of validity for ratings, such that as matches occur a timeseries of ratings is evolved for each player (i.e. type-2 data management as opposed to type-1 fire-and-forget ratings)
 
-This package addresses the gap above by providing rating system implementations with:
-  - a simple interface for in-memory data management (i.e. storing the ratings as they evolve )
-  - time-aware ratings retrieval (i.e. *resolving* a player to the respective rating at an arbitrary point in time)
+This package addresses this gap by providing rating system implementations with:
+  - a simple interface for in-memory data management (i.e. storing the ratings as they evolve)
+  - time-aware ratings retrieval (i.e. *resolving* a player to their respective rating at an arbitrary point in time)
   - scikit-learn classifier methods to interact with the predictions in a (more) typical data science workflow
 
 ## Installation
 
-- Install via the PyPI package using pip:
+Install via the PyPI package using pip:
 ```python
 pip3 install skelo
 ```
 
 ## Quickstart
 
-As a quickstart, we can load and fit an `EloEstimator` (classifier) on some sample tennis data:
+- As a quickstart, we can load and fit an `EloEstimator` (classifier) on some sample tennis data:
 ```python
 import numpy as np
 import pandas as pd
 from skelo.model.elo import EloEstimator
 
 df = pd.read_csv("https://raw.githubusercontent.com/JeffSackmann/tennis_atp/master/atp_matches_1979.csv")
+labels = len(df) * [1] # the data are ordered as winner/loser
 
 model = EloEstimator(
   key1_field="winner_name",
   key2_field="loser_name",
   timestamp_field="tourney_date",
   initial_time=19781231,
-).fit(df, len(df) * [1])
+).fit(df, labels)
 ```
 
-- The ratings data is availble as a `pandas DataFrame` if we wish to do any further analysis on it:
+- The ratings data are available as a `pandas DataFrame` if we wish to do any further analysis on it:
 ```python
 >>> model.rating_model.to_frame()
 
@@ -80,7 +81,7 @@ model = EloEstimator(
 
 [3959 rows x 2 columns]
 ```
-- Alternatively, we could also transform a datafrom into the forecast probabilities of victory for the player "winner_name":
+- Alternatively, we could also transform a datafrom into the forecast probabilities of victory for the player `"winner_name"`:
 ```
 >>> model.transform(df, output_type='prob')
 
@@ -98,7 +99,7 @@ model = EloEstimator(
 Length: 3959, dtype: float64
 ```
 
-- These probabilities are also available using the `predict_proba` or `predict` classifier methods, as shown below. What distinguishes `transform` from `predict_proba` is that `predict_proba` and `predict` return predictions that only use past data (i.e. you cannot cheat by leaking future data into the forecast), while `transform(X, strict_past_data=False).` may be used to compute ratings that "peak" into the future and could return new ratings with updates using a match outcome as of the the match start timestamp, since the match start time is typically a more convenient timestamp with which to index and manipulate data.
+- These probabilities are also available using the `predict_proba` or `predict` classifier methods, as shown below. What distinguishes `transform` from `predict_proba` is that `predict_proba` and `predict` return predictions that only use past data (i.e. you cannot cheat by leaking future data into the forecast), while `transform(X, strict_past_data=False)` may be used to compute ratings that "peek" into the future and could return ratings updated using match outcomes pushed (slightly) back in time to the match start timestamp. This is a specific convenience utility for non-forecasting use cases in which the match start time is a more convenient timestamp with which to index and manipulate data.
 ```
 >>> model.predict_proba(df)
 
@@ -208,7 +209,7 @@ def load_data():
 
 df = load_data()
 player_counts = pd.concat([df["p1"], df["p2"]], axis=0).value_counts()
-players = player_counts[player_counts > 10].index
+players = player_counts[player_counts > 5].index
 mask = (df["p1"].isin(players) & df["p2"].isin(players))
 X = df.loc[mask]
 
@@ -239,13 +240,24 @@ For determining the performance of a classifier, the `sklearn` API and model uti
 Below we calculate the classification metrics of the Elo system using only the 1980 data, where each prediction for a match uses only the outcomes of previous matches:
 
 ```python
+>>> from sklearn.metrics import classification_report
+>>> mask = (X["tourney_date"] > "1980-01-01")
+>>> print(classification_report(X.loc[mask, "label"], model.predict(X.loc[mask])))
+
+              precision    recall  f1-score   support
+
+           0      0.692     0.704     0.698      1782
+           1      0.700     0.689     0.694      1792
+
+    accuracy                          0.696      3574
+   macro avg      0.696     0.696     0.696      3574
+weighted avg      0.696     0.696     0.696      3574
+```
+
+Finally, we should inspect the calibration curve of the classifier to verify its linearity (or lack thereof!):
+```
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report
 from sklearn.calibration import calibration_curve
-
-mask = (X["tourney_date"] > "1980-01-01")
-
-print(classification_report(X.loc[mask, "label"], model.predict(X.loc[mask])))
 
 prob_true, prob_pred = calibration_curve(
   X.loc[mask, "label"],
@@ -259,7 +271,7 @@ plt.ylabel("Empirical Probability")
 plt.legend()
 ```
 
-It's interesting to note that the calibration curve is not linear, but rather has a slight but noticeable sigmoidal shape. If you plan on doing anything with the Elo predictions in aggregate, you may want to consider [calibrating the classifier output](https://scikit-learn.org/stable/modules/calibration.html).
+It's interesting to note that the calibration curve is not strictly linear, but rather has a slight but noticeable sigmoidal shape. If you plan on doing anything with the Elo predictions in aggregate, you may want to consider [calibrating the classifier output](https://scikit-learn.org/stable/modules/calibration.html).
 ![Elo Calibration for ATP Matches, 1980](https://raw.githubusercontent.com/mbhynes/skelo/main/examples/atp_1979-calibration.png)
 
 ### Example Paramter Tuning
@@ -285,20 +297,19 @@ results = pd.DataFrame(clf.cv_results_)
 
 This should produce a result like the following:
 ```python
-results.sort_values('rank_test_score').head(2).T
+>>> results.sort_values('rank_test_score').head(5).T
 
-                                     7                  8
-  mean_fit_time               0.041697            0.09369
-  std_fit_time                     0.0                0.0
-  mean_score_time             0.050558           0.067095
-  std_score_time                   0.0                0.0
-  param_default_k                   45                 50
-  param_k_fn                       NaN                NaN
-  params             {'default_k': 45}  {'default_k': 50}
-  split0_test_score           0.679201           0.679201
-  mean_test_score             0.679201           0.679201
-  std_test_score                   0.0                0.0
-  rank_test_score                    1                  1
+                                   2                  4                  1                  6                  8
+mean_fit_time               0.193156           0.172773           0.490719           0.162793           0.045234
+std_fit_time                     0.0                0.0                0.0                0.0                0.0
+mean_score_time             0.269005           0.304881           0.336428           0.288607            0.06117
+std_score_time                   0.0                0.0                0.0                0.0                0.0
+param_default_k                   20                 30                 15                 40                 50
+params             {'default_k': 20}  {'default_k': 30}  {'default_k': 15}  {'default_k': 40}  {'default_k': 50}
+split0_test_score           0.678779           0.677115            0.67656           0.675451           0.675451
+mean_test_score             0.678779           0.677115            0.67656           0.675451           0.675451
+std_test_score                   0.0                0.0                0.0                0.0                0.0
+rank_test_score                    1                  2                  3                  4                  4
 ```
 
 ### Example Tennis Ranking - Glicko2 ratings using the `sklearn` API
@@ -334,18 +345,19 @@ clf = GridSearchCV(
 results = pd.DataFrame(clf.cv_results_)
 ```
 
-We can now compare the best Glicko2 models with the Elo above and note that our test period forecasting accuracy has improved from 67.9% to 68.7%:
+We can now compare the best Glicko2 models with the Elo above and note that our test period forecasting accuracy has improved from 67.8% to 69.3%:
 ```python
-results.sort_values('rank_test_score').head(2).T
-                                                            2                                         3
-mean_fit_time                                        0.199451                                  0.247384
+>>> results.sort_values('rank_test_score').head(2).T
+
+                                                            3                                         2
+mean_fit_time                                        0.212466                                  0.217531
 std_fit_time                                              0.0                                       0.0
-mean_score_time                                       0.06556                                  0.076436
+mean_score_time                                      0.068816                                  0.083714
 std_score_time                                            0.0                                       0.0
-param_initial_value                     (1500.0, 500.0, 0.06)                     (1500.0, 750.0, 0.06)
-params               {'initial_value': (1500.0, 500.0, 0.06)}  {'initial_value': (1500.0, 750.0, 0.06)}
-split0_test_score                                    0.687427                                  0.685664
-mean_test_score                                      0.687427                                  0.685664
+param_initial_value                     (1500.0, 750.0, 0.06)                     (1500.0, 500.0, 0.06)
+params               {'initial_value': (1500.0, 750.0, 0.06)}  {'initial_value': (1500.0, 500.0, 0.06)}
+split0_test_score                                    0.693204                                  0.692649
+mean_test_score                                      0.693204                                  0.692649
 std_test_score                                            0.0                                       0.0
 rank_test_score                                             1                                         2
 ```
@@ -413,8 +425,10 @@ class EloModel(RatingModel):
 ```python
 class EloEstimator(RatingEstimator):
 
+  # Set this to the appropriate RatingModel:
   RATING_MODEL_CLS = EloModel
 
+  # Include all tunable hyperparameter attributes of the RatingModel here:
   RATING_MODEL_ATTRIBUTES = [
     'default_k',
     'k_fn',
