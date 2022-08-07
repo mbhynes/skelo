@@ -20,7 +20,7 @@ This package addresses this gap by providing rating system implementations with:
 
 ## Installation
 
-Install via the PyPI package using pip:
+Install via the PyPI package [skelo](https://pypi.org/project/skelo/) using pip:
 ```python
 pip3 install skelo
 ```
