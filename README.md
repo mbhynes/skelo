@@ -7,11 +7,11 @@ It's intended to provide a simple API for creating elo ratings in a small games 
 
 ## Motivation
 
-Why this package?
+What problem does this package solve?
 
-Because I don't want [y](https://github.com/sublee/elo/) [o](https://github.com/ddm7018/Elo) [u](https://github.com/rshk/elo) [r](https://github.com/HankSheehan/EloPy) [API](https://github.com/McLeopold/PythonSkills).
-
-I want [their](https://scikit-learn.org/stable/modules/classes.html) API.
+Despite there being many ratings systems implementations available (e.g. [elo](https://github.com/sublee/elo/) [Elo](https://github.com/ddm7018/Elo), [elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills)) it's hard to find one that satisfies several criteria for ease of use:
+  - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn estimator [interface](https://scikit-learn.org/stable/modules/classes.html) is the *de facto* standard
+  - Explicit management of intervals of validity for ratings, such that as matches occur a timeseries of ratings is evolved for each players (i.e. type-2 data management as opposed to type-1 fire-and-forget ratings)
 
 ## Installation
 
@@ -132,8 +132,8 @@ prob_true, prob_pred = calibration_curve(
 )
 plt.plot(prob_pred, prob_true, label=f"Elo Classifier, k={model.elo.default_k}", marker='s', color='b')
 plt.plot([0, 1], [0, 1], label="Perfect Calibration", ls=":", color='k')
-plt.xlabel("Prediction Probability")
-plt.ylabel("Empirircal Probability")
+plt.xlabel("Predicted Probability")
+plt.ylabel("Empirical Probability")
 plt.legend()
 ```
 
@@ -148,25 +148,18 @@ import skelo.utils.elo_data as data_utils
 
 clf = GridSearchCV(
   model,
-  param_grid=[{
+  param_grid={
     'default_k': [
       10, 15, 20, 25, 30, 35, 40, 45, 50,
     ]
-  }, {
-    'k_fn': [
-      data_utils.sigmoid_k_fn_builder(1500, 2000, k1=20, k2=10),
-      data_utils.sigmoid_k_fn_builder(1500, 2000, k1=50, k2=10),
-      data_utils.sigmoid_k_fn_builder(1500, 2500, k1=50, k2=20),
-      data_utils.sigmoid_k_fn_builder(1500, 2500, k1=50, k2=10),
-    ],
-  }],
+  },
   cv=[(X.index, X.index[len(X)//2:])],
 ).fit(X, X['label'])
 
 results = pd.DataFrame(clf.cv_results_)
 ```
 
-This should give a result like the following:
+This should produce a result like the following:
 ```python
 results.sort_values('rank_test_score').head(2).T
 

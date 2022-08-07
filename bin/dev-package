@@ -8,6 +8,9 @@ check_requires ${REQUIRES[@]}
 python3 -m venv .venv
 source $ROOT_DIR/.venv/bin/activate || die "Could not source the venv in $PWD/.venv"
 
+if [ -d "dist/" ]; then
+  rm -i dist/*
+fi
 python3 -m pip install --upgrade build  || die "Could not install build"
 python3 -m build
 exit $?

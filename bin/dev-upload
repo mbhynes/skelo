@@ -13,9 +13,10 @@ python3 -m build
 
 if [[ "$1" == '--test' ]]; then
   repository=testpypi
+  shift
 else
   repository=pypi
 fi
 
-python3 -m twine upload --repository "$repository" dist/*
+python3 -m twine upload --repository "$repository" dist/* $@
 exit $?
