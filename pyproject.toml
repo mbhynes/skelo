@@ -4,6 +4,7 @@ requires = [
   "numpy",
   "sklearn",
   "pandas",
+  "pyglicko2",
 ]
 build-backend = "setuptools.build_meta"
 

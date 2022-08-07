@@ -1,6 +1,6 @@
 # skelo
 
-An implementation of the [Elo rating system](https://en.wikipedia.org/wiki/Elo_rating_system) with a [scikit-learn](https://scikit-learn.org/stable/)-compatible interface.
+An implementation of the [Elo](https://en.wikipedia.org/wiki/Elo_rating_system) and [Glicko2](https://en.wikipedia.org/wiki/Glicko_rating_system) with a [scikit-learn](https://scikit-learn.org/stable/)-compatible interface.
 
 The `skelo` package is a simple implementation suitable for small-scale ratings systems that fit into memory on a single machine.
 It's intended to provide a simple API for creating elo ratings in a small games on the scale thousands of players and millions of matches, primarily as a means of feature transformation for inclusion in other `sklearn` pipelines.
@@ -9,7 +9,7 @@ It's intended to provide a simple API for creating elo ratings in a small games 
 
 What problem does this package solve?
 
-Despite there being many ratings systems implementations available (e.g. [elo](https://github.com/sublee/elo/) [Elo](https://github.com/ddm7018/Elo), [elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills)) it's hard to find one that satisfies several criteria for ease of use:
+Despite there being many ratings systems implementations available (e.g. [sublee/elo](https://github.com/sublee/elo/) [ddm7018/Elo](https://github.com/ddm7018/Elo), [rshk/elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills), [pyglicko2](https://github.com/ryankirkman/pyglicko2), [glicko](https://github.com/sublee/glicko)) it's hard to find one that satisfies several criteria for ease of use:
   - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn estimator [interface](https://scikit-learn.org/stable/modules/classes.html) is the *de facto* standard
   - Explicit management of intervals of validity for ratings, such that as matches occur a timeseries of ratings is evolved for each players (i.e. type-2 data management as opposed to type-1 fire-and-forget ratings)
 
@@ -19,6 +19,12 @@ Despite there being many ratings systems implementations available (e.g. [elo](h
 ```python
 pip3 install skelo
 ```
+
+## Available Models
+
+- [`EloEstimator`](https://github.com/mbhynes/skelo/blob/main/skelo/model/elo.py)
+- [`Glicko2Estimator`](https://github.com/mbhynes/skelo/blob/main/skelo/model/glicko2.py)
+  - This class is a light wrapper around [pyglicko2](https://github.com/ryankirkman/pyglicko2), which was chosen over [PythonSkills](https://github.com/McLeopold/PythonSkills) since it implements the Glicko2 algorithm rather than the original Glicko(1?) algorithm.
 
 ## Example Usage
 
@@ -43,7 +49,7 @@ y = matches.values[:, -1] # match outcome
 model = EloEstimator().fit(X, y)
 
 # Get a dataframe of the estimated ratings over time from the fitted model
-ratings_est = model.elo.to_frame()
+ratings_est = model.rating_model.to_frame()
 
 # Compare the ratings estimate over time
 ts_est = ratings_est.pivot_table(index='valid_from', columns='key', values='rating')
@@ -100,7 +106,7 @@ model = EloEstimator(
 ).fit(X, X["label"])
 
 #  Retrieve the fitted Elo ratings from the model
-ratings_est = model.elo.to_frame()
+ratings_est = model.rating_model.to_frame()
 ts_est = ratings_est.pivot_table(index='valid_from', columns='key', values='rating').ffill()
 
 idx = ts_est.iloc[-1].sort_values().index[-5:]
@@ -110,7 +116,7 @@ ts_est.loc[:, idx].plot()
 This should result in a figure like the one below, showing the 5 highest ranked (within the Elo system) players based on this subset of ATP matches:
 ![Top ATP Player Ratings, 1979-1980](https://raw.githubusercontent.com/mbhynes/skelo/main/examples/atp_1979.png)
 
-### Example Tennis Ranking - using the `sklearn` API
+### Example Tennis Ranking - Elo ratings using the `sklearn` API
 
 While the ratings are mildly interesting to visualize, the predictive performance of the rating system's predictions have more practical importance.
 For determining the performance of a classifier, the `sklearn` API and model utilities provide simple tools for us.
@@ -130,7 +136,7 @@ prob_true, prob_pred = calibration_curve(
   model.predict_proba(X.loc[mask]).values[:, 0],
   n_bins=10
 )
-plt.plot(prob_pred, prob_true, label=f"Elo Classifier, k={model.elo.default_k}", marker='s', color='b')
+plt.plot(prob_pred, prob_true, label=f"Elo Classifier, k={model.rating_model.default_k}", marker='s', color='b')
 plt.plot([0, 1], [0, 1], label="Perfect Calibration", ls=":", color='k')
 plt.xlabel("Predicted Probability")
 plt.ylabel("Empirical Probability")
@@ -144,7 +150,6 @@ The below example trains several instances of the Elo ratings model with differe
 Please note that the `EloModel.predict()` method only uses past information available at each match, such that there is no leakage of information from the future in the model's forecasts.
 ```python
 from sklearn.model_selection import GridSearchCV
-import skelo.utils.elo_data as data_utils
 
 clf = GridSearchCV(
   model,
@@ -177,7 +182,57 @@ results.sort_values('rank_test_score').head(2).T
   rank_test_score                    1                  1
 ```
 
-## Development Guide
+### Example Tennis Ranking - Glicko2 ratings using the `sklearn` API
+
+The Glicko2 implementation that we wrap has no hyperparameters to tune other than the 3-tuple to provide as the `initial_value` for a player; namely the initial values of the rating, the rating deviation, and the volatility.
+(However the persnickety reader should note there are quite a lot of magic numbers in both the [Glicko](http://www.glicko.net/glicko/glicko.pdf) and [Glicko2](http://www.glicko.net/glicko/glicko2.pdf) papers that should probably constitute hyperparameters---these aren't available to tune simply because the available Glicko{1,2} implementations do not expose an interface that allows for tuning them. Beggars can't be choosers, as they say...)
+
+```
+import numpy as np
+from skelo.model.glicko2 import Glicko2Estimator
+from sklearn.model_selection import GridSearchCV
+
+model = Glicko2Estimator(
+  key1_field="p1",
+  key2_field="p2",
+  timestamp_field="tourney_date",
+  initial_time=np.datetime64('1979', 'Y'),
+)
+
+clf = GridSearchCV(
+  model,
+  param_grid={
+    'initial_value': [
+      (1500., 200., 0.06),
+      (1500., 350., 0.06),
+      (1500., 500., 0.06),
+      (1500., 750., 0.06),
+    ]
+  },
+  cv=[(X.index, X.index[len(X)//2:])],
+).fit(X, X['label'])
+
+results = pd.DataFrame(clf.cv_results_)
+```
+
+We can now compare the best Glicko2 models with the Elo above and note that our test period forecasting accuracy has improved from 67.9% to 68.7%:
+```python
+results.sort_values('rank_test_score').head(2).T
+                                                            2                                         3
+mean_fit_time                                        0.199451                                  0.247384
+std_fit_time                                              0.0                                       0.0
+mean_score_time                                       0.06556                                  0.076436
+std_score_time                                            0.0                                       0.0
+param_initial_value                     (1500.0, 500.0, 0.06)                     (1500.0, 750.0, 0.06)
+params               {'initial_value': (1500.0, 500.0, 0.06)}  {'initial_value': (1500.0, 750.0, 0.06)}
+split0_test_score                                    0.687427                                  0.685664
+mean_test_score                                      0.687427                                  0.685664
+std_test_score                                            0.0                                       0.0
+rank_test_score                                             1                                         2
+```
+
+
+## Development Setup
 
 If you would like to contribute to this repository, please open an [issue](issues/new) first to document the extension or modification you're interested  in contributing.
 
@@ -205,3 +260,5 @@ The `dev` script (and other scripts in `bin`) contain convenience wrappers for s
   ./dev upload --test 
   ./dev upload
   ```
+
+## Development Setup

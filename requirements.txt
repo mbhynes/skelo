@@ -2,3 +2,4 @@ numpy
 sklearn
 pandas
 pytest
+glicko2

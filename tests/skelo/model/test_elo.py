@@ -132,8 +132,8 @@ class TestEloEstimator:
     y = games.values[:, -1] # outcome
     estimator = EloEstimator().fit(X, y)
     for p in range(num_players):
-      fit_rating = estimator.elo.get(p, timestamp=None)['rating']
-      assert np.abs(fit_rating - ratings[p]) < estimator.elo.default_k
+      fit_rating = estimator.rating_model.get(p, timestamp=None)['rating']
+      assert np.abs(fit_rating - ratings[p]) < estimator.rating_model.default_k
 
   def test_fit_dataframe(self):
     num_players = 4
@@ -141,8 +141,8 @@ class TestEloEstimator:
     games = pd.DataFrame(data_utils.generate_constant_game_outcomes(ratings, num_timesteps=100))
     estimator = EloEstimator('p1', 'p2', 'match_at').fit(games, games['label'])
     for p in range(num_players):
-      fit_rating = estimator.elo.get(p, timestamp=None)['rating']
-      assert np.abs(fit_rating - ratings[p]) < estimator.elo.default_k
+      fit_rating = estimator.rating_model.get(p, timestamp=None)['rating']
+      assert np.abs(fit_rating - ratings[p]) < estimator.rating_model.default_k
 
   def test_transform_dataframe(self):
     num_players = 2
@@ -152,15 +152,15 @@ class TestEloEstimator:
 
     transformed_ratings = estimator.transform(games, output_type='rating')
     for k, (_, g) in enumerate(games.iterrows()):
-      r1_expected = estimator.elo.get(g['p1'], timestamp=g['match_at'])['rating']
-      r2_expected = estimator.elo.get(g['p2'], timestamp=g['match_at'])['rating']
+      r1_expected = estimator.rating_model.get(g['p1'], timestamp=g['match_at'])['rating']
+      r2_expected = estimator.rating_model.get(g['p2'], timestamp=g['match_at'])['rating']
       assert r1_expected == transformed_ratings.iloc[k]['r1']
       assert r2_expected == transformed_ratings.iloc[k]['r2']
 
     transformed_prob = estimator.transform(games, output_type='prob')
     for k, (_, g) in enumerate(games.iterrows()):
-      r1_expected = estimator.elo.get(g['p1'], timestamp=g['match_at'])['rating']
-      r2_expected = estimator.elo.get(g['p2'], timestamp=g['match_at'])['rating']
+      r1_expected = estimator.rating_model.get(g['p1'], timestamp=g['match_at'])['rating']
+      r2_expected = estimator.rating_model.get(g['p2'], timestamp=g['match_at'])['rating']
       prob = EloModel.compute_prob(r1_expected, r2_expected)
       assert transformed_prob.iloc[k] == EloModel.compute_prob(r1_expected, r2_expected)
 
@@ -174,15 +174,15 @@ class TestEloEstimator:
 
     transformed_ratings = estimator.transform(X, output_type='rating')
     for k, (_, g) in enumerate(games.iterrows()):
-      r1_expected = estimator.elo.get(g['p1'], timestamp=g['match_at'])['rating']
-      r2_expected = estimator.elo.get(g['p2'], timestamp=g['match_at'])['rating']
+      r1_expected = estimator.rating_model.get(g['p1'], timestamp=g['match_at'])['rating']
+      r2_expected = estimator.rating_model.get(g['p2'], timestamp=g['match_at'])['rating']
       assert r1_expected == transformed_ratings[k, 0]
       assert r2_expected == transformed_ratings[k, 1]
 
     transformed_prob = estimator.transform(X, output_type='prob')
     for k, (_, g) in enumerate(games.iterrows()):
-      r1_expected = estimator.elo.get(g['p1'], timestamp=g['match_at'])['rating']
-      r2_expected = estimator.elo.get(g['p2'], timestamp=g['match_at'])['rating']
+      r1_expected = estimator.rating_model.get(g['p1'], timestamp=g['match_at'])['rating']
+      r2_expected = estimator.rating_model.get(g['p2'], timestamp=g['match_at'])['rating']
       prob = EloModel.compute_prob(r1_expected, r2_expected)
       assert transformed_prob[k] == prob
 
