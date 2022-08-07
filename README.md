@@ -9,11 +9,11 @@ It's intended to provide a simple API for creating elo ratings in a small games 
 
 What problem does this package solve?
 
-Despite there being many ratings systems implementations available (e.g. [sublee/elo](https://github.com/sublee/elo/) [ddm7018/Elo](https://github.com/ddm7018/Elo), [rshk/elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills), [pyglicko2](https://github.com/ryankirkman/pyglicko2), [glicko2](https://github.com/deepy/glicko2), [glicko](https://github.com/sublee/glicko)) it's hard to find one that satisfies several criteria:
-  - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn estimator [interface](https://scikit-learn.org/stable/modules/classes.html) is the *de facto* standard for this use case
+Despite there being many ratings system implementations available (e.g. [sublee/elo](https://github.com/sublee/elo/) [ddm7018/Elo](https://github.com/ddm7018/Elo), [rshk/elo](https://github.com/rshk/elo), [EloPy](https://github.com/HankSheehan/EloPy), [PythonSkills](https://github.com/McLeopold/PythonSkills), [pyglicko2](https://github.com/ryankirkman/pyglicko2), [glicko2](https://github.com/deepy/glicko2), [glicko](https://github.com/sublee/glicko)) it's hard to find one that satisfies several criteria:
+  - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn estimator [interface](https://scikit-learn.org/stable/modules/classes.html) is the *de facto* standard
   - Explicit management of intervals of validity for ratings, such that as matches occur a timeseries of ratings is evolved for each players (i.e. type-2 data management as opposed to type-1 fire-and-forget ratings)
 
-This package addresses the criteria above by providing a simple interface for in-memory data management (i.e. storing the ratings as they evolve and *resolving* a player to the respective rating at an arbitrary point in time) and scikit-learn classifier methods to interact with the ratings in a typical data science development cycle.
+This package addresses the gap above by providing rating system implementations with a simple interface for in-memory data management (i.e. storing the ratings as they evolve ), retrieval (i.e. *resolving* a player to the respective rating at an arbitrary point in time), and scikit-learn classifier methods to interact with the ratings in a typical data science workflow.
 
 ## Installation
 
@@ -95,7 +95,7 @@ model = EloEstimator(
 Length: 3959, dtype: float64
 ```
 
-- These probabilities are also available using the `predict_proba` or `predict` classifier methods:
+- These probabilities are also available using the `predict_proba` or `predict` classifier methods, as shown below. What distinguishes `transform` from `predict_proba` is that `predict_proba` and `predict` return predictions that only use past data (i.e. you cannot cheat by leaking future data into the forecast), while `transform` may be used to compute ratings that "peak" into the future and could return new ratings with updates using a match outcome as of the the match start timestamp, since the match start is typically a more convenient timestamp to index data with
 ```
 >>> model.predict_proba(df)
 
@@ -113,9 +113,7 @@ Length: 3959, dtype: float64
 3958  0.476845  0.523155
 
 [3959 rows x 2 columns]
-```
 
-```
 >>> model.predict(df)
 
 0       1.0
@@ -132,7 +130,7 @@ Length: 3959, dtype: float64
 Name: pr1, Length: 3959, dtype: float64
 ```
 
-## Available Models
+## Available Rating System Estimators
 
 The models in this package are the following:
 
@@ -233,7 +231,7 @@ This should result in a figure like the one below, showing the 5 highest ranked 
 
 ### Example Tennis Ranking - Elo ratings using the `sklearn` API
 
-While the ratings are mildly interesting to visualize, the predictive performance of the rating system's predictions have more practical importance.
+While the ratings are interesting to visualize, the accuracy of the rating system's predictions are more important.
 For determining the performance of a classifier, the `sklearn` API and model utilities provide simple tools for us.
 Below we calculate the classification metrics of the Elo system using only the 1980 data, where each prediction for a match uses only the outcomes of previous matches:
 
@@ -258,9 +256,12 @@ plt.ylabel("Empirical Probability")
 plt.legend()
 ```
 
+It's interesting to note that the calibration curve is not linear, but rather has a slight but noticeable sigmoidal shape. If you plan on doing anything with the Elo predictions in aggregate, you may want to consider [calibrating the classifier output](https://scikit-learn.org/stable/modules/calibration.html).
 ![Elo Calibration for ATP Matches, 1980](https://raw.githubusercontent.com/mbhynes/skelo/main/examples/atp_1979-calibration.png)
 
-We can now also use the `sklearn` utilities for parameter tuning.
+### Example Paramter Tuning
+
+We can now also use the `sklearn` utilities for parameter tuning, similar to any other forecasting model.
 The below example trains several instances of the Elo ratings model with different values of `k` to find value that maximizes prediction accuracy during the ATP matches for 1980.
 Please note that the `EloModel.predict()` method only uses past information available at each match, such that there is no leakage of information from the future in the model's forecasts.
 ```python
