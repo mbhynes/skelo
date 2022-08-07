@@ -4,13 +4,13 @@ requires = [
   "numpy",
   "sklearn",
   "pandas",
-  "pyglicko2",
+  "glicko2",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "skelo"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Michael B Hynes", email="mike.hynes.rhymes@gmail.com" },
 ]
