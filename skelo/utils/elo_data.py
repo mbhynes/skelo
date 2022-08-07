@@ -24,6 +24,31 @@ import numpy as np
 
 from skelo.model.elo import EloModel
 
+def sigmoid(x):
+  return 0.5 * (np.tanh(2*x) + 1)
+
+def sigmoid_k_fn_builder(r1, r2, k1, k2):
+  """
+  Build an function that returns an Elo k value that is univariate in the rating value.
+  This function builder creates a sigmoid-shaped function that decreases approximately
+  linearly from value k1 to k2 between ratings values r1 to r2 (r2 > r1).
+  
+  The function shape is illustrated in the schematic below:
+             r1
+    k1 _______ 
+              \
+               \
+                \________ k2
+                r2
+
+  Such a function shape provides a decreasing value of k in accordance with the
+  recommendation by Arpad Elo that better (i.e. higher ranked) players have a lower
+  value of k and therefore less volatility in their ratings updates after a match.
+  """
+  assert r2 > r1, f"r2 must be greater than r1; received: r2 ({r2}) <= r1 ({r1})"
+  midpoint = (r1 + r2) / 2.0
+  slope = midpoint / 2.0 
+  return lambda r: k1 - (k1 - k2) * sigmoid((r - midpoint) / slope)
 
 def generate_ratings(num_players, num_timesteps, mu=1500, sigma=1, seed=1):
   """

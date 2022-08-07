@@ -329,7 +329,7 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
     - transform(X) to map player tuples into their respective ratings
   """
 
-  def __init__(self, key1_field=None, key2_field=None, timestamp_field=None, **kwargs):
+  def __init__(self, key1_field=None, key2_field=None, timestamp_field=None, default_k=20, k_fn=None, g=1, initial_value=1500, initial_time=0):
     """
     Construct a classifier object, without fitting it.
     
@@ -339,7 +339,13 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
       timestamp_field (string): column name of the timestamp field, if fit on a pandas DataFrame
       kwargs: kwargs to pass to the underlying EloModel
     """
-    self.elo = EloModel(**kwargs)
+    self.default_k = default_k
+    self.g = g
+    self.k_fn = k_fn
+    self.initial_value = initial_value
+    self.initial_time = initial_time
+    self.elo = None
+
     self.key1_field = key1_field
     self.key2_field = key2_field
     self.timestamp_field = timestamp_field
@@ -391,6 +397,13 @@ class EloEstimator(BaseEstimator, ClassifierMixin):
       raise ValueError("Could not create an initial timestamp to use for ratings during fit. Please verify the dtype of the column.")
 
     # Build the Elo model from the user keyset
+    self.elo = EloModel(
+      default_k=self.default_k,
+      g=self.g,
+      k_fn=self.k_fn,
+      initial_value=self.initial_value,
+      initial_time=self.initial_time,
+    )
     keys = set(x[:, 0])
     keys.update(set(x[:, 1]))
     self.elo.build(keys)
