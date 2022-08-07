@@ -431,3 +431,6 @@ class EloEstimator(RatingEstimator):
     self.default_k = default_k
     self.k_fn = k_fn
 ```
+
+Please note that a `rating` can be anything, so long as it's convenient and can support the above call signatures to create a new rating object like-for-like from existing rating objects.
+For example, our `EloModel` implementation uses a plain `float`, and the `Glicko2Model` uses a 3-tuple for the 3 generative parameters for a player's rating.
