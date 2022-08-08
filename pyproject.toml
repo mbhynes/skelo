@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skelo"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   { name="Michael B Hynes", email="mike.hynes.rhymes@gmail.com" },
 ]
@@ -28,3 +28,4 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/mbhynes/skelo"
 "Bug Tracker" = "https://github.com/mbhynes/skelo/issues"
+"Documentation" = "https://skelo.readthedocs.io/en/latest/"

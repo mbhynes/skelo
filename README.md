@@ -25,6 +25,8 @@ Install via the PyPI package [skelo](https://pypi.org/project/skelo/) using pip:
 pip3 install skelo
 ```
 
+Further reference information on the API is hosted on [skelo.readthedocs.io](https://skelo.readthedocs.io/en/latest/).
+
 ## Quickstart
 
 - As a quickstart, we can load and fit an `EloEstimator` (classifier) on some sample tennis data:
