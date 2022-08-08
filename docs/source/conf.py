@@ -22,6 +22,13 @@ source_suffix = '.rst'
 templates_path = ['_templates']
 exclude_patterns = []
 
+autodoc_default_options = {
+  'members': True,
+  'member-order': 'bysource',
+  'special-members': '__init__',
+  'undoc-members': True,
+  'exclude-members': '__weakref__',
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -34,5 +41,15 @@ def linkcode_resolve(domain, info):
       return None
   if not info['module']:
       return None
-  filename = info['module'].replace('.', '/')
-  return f"https://github.com/mbhynes/skelo/tree/main/{filename}.py"
+
+  repo_base = 'https://github.com/mbhynes/skelo/tree/main'
+
+  init_modules = [
+    'skelo.model',
+  ]
+
+  if info['module'] in init_modules:
+    filename = info['module'].replace('.', '/') + '/__init__.py'
+  else:
+    filename = info['module'].replace('.', '/') + '.py'
+  return f"{repo_base}/{filename}"
