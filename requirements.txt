@@ -3,3 +3,5 @@ sklearn
 pandas
 pytest
 glicko2
+sphinx
+sphinx-rtd-theme
