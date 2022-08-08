@@ -455,11 +455,14 @@ class RatingEstimator(BaseEstimator, ClassifierMixin):
 
     This method may be used after the model has been fit to convert a design matrix of
     player identifiers into numerical quantities at either historical times or future times.
-    It should be preferred to `predict_proba` when historical as-of probabilities are desired
-    in which the match outcome is known but the player ratings (or victory probabilities
-    estimated thereby) immediately prior to the match are desired for model backtesting or
-    training use cases. The method `predict_proba` will only return probabilities for strict
-    future matches, and is not suitable for historical as-of predictions.
+    What distinguishes `transform` from `predict_proba` and `predict` is that `predict_proba`
+    and `predict` return predictions that *only* use past data, and *cannot* cheat
+    by leaking future data into a forecast. However, when `transform` is called with
+    `strict_past_data=False`, it is possible to compute ratings that *peek* into the
+    future, and could return ratings updated using match outcomes pushed (slightly)
+    back in time to the match start timestamp. This is a specific convenience
+    utility for non-forecasting use cases in which the match start time is a more
+    convenient timestamp with which to index and manipulate data.
 
     Args:
       X (numpy.ndarray or pandas DataFrame): design matrix of matches with key1, key2, timestamp data
