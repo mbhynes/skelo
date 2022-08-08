@@ -274,6 +274,7 @@ plt.legend()
 ```
 
 It's interesting to note that the calibration curve is not strictly linear, but rather has a slight but noticeable sigmoidal shape. If you plan on doing anything with the Elo predictions in aggregate, you may want to consider [calibrating the classifier output](https://scikit-learn.org/stable/modules/calibration.html).
+
 ![Elo Calibration for ATP Matches, 1980](https://raw.githubusercontent.com/mbhynes/skelo/main/examples/atp_1979-calibration.png)
 
 ### Example Paramter Tuning

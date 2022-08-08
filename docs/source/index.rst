@@ -22,10 +22,12 @@ Motivation
 What problem does this package solve?
 
 Despite there being many opensource rating system implementations available, it's hard to find one that satisfies several criteria:
+
 - A simple and clean API that's convenient for a data-driven model development loop, for which use case the scikit-learn `estimator interface <https://scikit-learn.org/stable/modules/classes.html>`_ is the *de facto* standard
 - Explicit management of intervals of validity for ratings, such that as matches occur a timeseries of ratings is evolved for each player (i.e. type-2 data management as opposed to type-1 fire-and-forget ratings)
 
 This package addresses this gap by providing rating system implementations with:
+
 - a simple interface for in-memory data management (i.e. storing the ratings as they evolve)
 - time-aware ratings retrieval (i.e. *resolving* a player to their respective rating at an arbitrary point in time)
 - scikit-learn classifier methods to interact with the predictions in a typical data science workflow
@@ -194,6 +196,9 @@ Utilities
 .. automodule:: skelo.utils.elo_data
    :members:
 
+Examples
+========
+More usage examples, including using `sklearn` cross validation routines to tune Elo hyperparameters are available in the project repository's `README <https://github.com/mbhynes/skelo#extended-usage-examples>`_.
 
 
 Indices and tables
