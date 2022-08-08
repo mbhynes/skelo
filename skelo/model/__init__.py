@@ -32,6 +32,10 @@ logger = logging.getLogger(__name__)
 class RatingModel(object):
   """
   Base class specifying the API to update and store player ratings data.
+  
+  The `RatingModel` (and its subclasses) are not necessary to instantiate directly,
+  but are factory objects for performing the ratings data storage and retrieval for
+  the `sklean`-compatible estimator classes.
   """
 
   def __init__(self, initial_value, initial_time):
@@ -89,21 +93,25 @@ class RatingModel(object):
     for the player as of the timestamp. If timestmap=None is passed, the
     last appended rating record is returned.
 
-    If strict_past_data is True, then no ratings data from matches at times
+    If `strict_past_data` is `True`, then no ratings data from matches at times
     equal to or greater than timestamp will be returned. This is useful to
     ensure that no future information leaks into the retrieved ratings. 
 
-    If strict_past_data is False, then in the event that there exist 1 or more
+    If `strict_past_data` is `False`, then in the event that there exist 1 or more
     matches at timestamp, the last appended rating for that timestamp will be
     returned.
 
     As an example, consider the following ratings for a player:
-    [
-      {'valid_from': 1, 'valid_to': 2,    'rating': 1500},
-      {'valid_from': 2, 'valid_to': 2,    'rating': 1510},
-      {'valid_from': 2, 'valid_to': 3,    'rating': 1520},
-      {'valid_from': 3, 'valid_to': None, 'rating': 1530},
-    ]
+
+    .. code-block::
+
+      [
+        {'valid_from': 1, 'valid_to': 2,    'rating': 1500},
+        {'valid_from': 2, 'valid_to': 2,    'rating': 1510},
+        {'valid_from': 2, 'valid_to': 3,    'rating': 1520},
+        {'valid_from': 3, 'valid_to': None, 'rating': 1530},
+      ]
+
     These ratings correspond to 3 matches played at times 2, 2, and 3. The first
     rating is simply a book-keeping record that gives the initial rating value
     at the system initial time. It is permissible to have 2 matches occur at the
@@ -111,14 +119,14 @@ class RatingModel(object):
     physically meaningful rating in the event of collisions in time).
 
     In this example:
-      - the call get(key, 1) returns record 1 (rating 1500), regardless of the value
-        of strict_past_data, since this record should be returned for any timestamp
-        prior to the first observed match for the player
-      - the call get(key, 2, strict_past_data=True) returns record 1 (rating 1500)
-      - the call get(key, 2, strict_past_data=False) returns record 3 (rating 1520)
-      - the call get(key, 3, strict_past_data=True) returns record 3 (rating 1530)
-      - the call get(key, 4) returns record 4 (rating 1520)
-      - the call get(key) returns record 4 (rating 1520), since no timestamp is given
+    - the call `get(key, 1)` returns record 1 (rating 1500), regardless of the value
+    of strict_past_data, since this record should be returned for any timestamp
+    prior to the first observed match for the player
+    - the call `get(key, 2, strict_past_data=True)` returns record 1 (rating 1500)
+    - the call `get(key, 2, strict_past_data=False)` returns record 3 (rating 1520)
+    - the call `get(key, 3, strict_past_data=True)` returns record 3 (rating 1530)
+    - the call `get(key, 4)` returns record 4 (rating 1520)
+    - the call `get(key)` returns record 4 (rating 1520), since no timestamp is given
 
     For use cases in which future data leakage is problematic (e.g. forecasting),
     strict_past_data=True should always be used. For use cases where simple ratings
@@ -153,18 +161,20 @@ class RatingModel(object):
 
   def update(self, winner, loser, timestamp):
     """
-    Update the ratings for the given players for a match at the provided timestamp
+    Update the ratings for the given players for a match at the provided `timestamp`
     by performing the following operations:
-      - set the players' latest rating valid_to time to timestamp
-      - calculate the new ratings and append these with valid_from set to timestamp
+    - set both players' latest ratings' `valid_to` time to timestamp
+    - then calculate the new ratings and append these with `valid_from` set to `timestamp`
 
     Args:
       winner: identifier for the player who won
       loser: identifier for the player who lost
-      timestamp: system time at which the match occurred
+      timestamp: system time at which the match occurred. While we say "timestamp" this does not
+        imply any requirement that the type be a `datetime.datetim` or similar. Any orderable type
+        is suitable.
 
     Returns:
-      RatingModel: this object
+      RatingModel: self
 
     Raises:
       KeyError: if winner or loser is not yet added to the system
@@ -199,17 +209,18 @@ class RatingModel(object):
   @staticmethod
   def compute_prob(r1, r2):
     """
-    Return the probability of a player with rating r1 beating a player with rating r2.
+    Returns:
+      float: the probability of a player with rating `r1` beating a player with rating `r2`.
     """
     raise NotImplementedError
 
   def predict_proba(self, key1, key2, timestamp=None, strict_past_data=True):
     """
-    Compute the probability of victory of player key1 over player key2 at the
+    Compute the probability of victory of player `key1` over player `key2` at the
     given timestamp. If no timestamp is provided, then the latest rating for
     a player is used to calculate the probability.
 
-    Either scalar values or iterable values may be provided for key1, key2, and
+    Either scalar values or iterable values may be provided for `key1`, `key2`, and
     timestamp to provide a convenient API bulk prediction (i.e. the caller need
     not write a for-loop to call predict_proba multiple times).
 
@@ -305,13 +316,28 @@ class RatingModel(object):
 
 class RatingEstimator(BaseEstimator, ClassifierMixin):
   """
-  A scikit-learn Classifier implementing a rating system.
+  Base class for a `scikit-learn` classifier implementing a rating system.
 
   This class creates an RatingModel ratings object and provides the scikit-learn API for using it:
-    - fit(X, y) to fit a model
-    - predict_proba(X) to generate continuous-valued predictions of match outcomes
-    - predict(X) to generate binary prediction labels for match outcomes
-    - transform(X) to map player tuples into their respective ratings
+
+  - `fit(X, y)` to fit a model
+  - `predict_proba(X)` to generate continuous-valued predictions of match outcomes
+  - `predict(X)` to generate binary prediction labels for match outcomes
+  - `transform(X)` to map player tuples into their respective ratings
+
+  Child classes can be used analogously to any `sklearn` classifier; the call signature will look
+  similar to the following:
+
+  .. code-block::
+
+    X_train, y_train = ... # Training Design matrix & match labels
+    model = RatingEstimator().fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+  Child classes that implement a particular ratings model need to override the following class variables:
+
+  - `RATING_MODEL_CLS`
+  - `RATING_MODEL_ATTRIBUTES`
   """
 
   # Define the type of RatingModel. This should be overridden by child classes. 
@@ -358,14 +384,14 @@ class RatingEstimator(BaseEstimator, ClassifierMixin):
     Fit the classifier by computing the ratings for each player given the match data.
 
     Args:
-      X (numpy.ndarray or pandas DataFrame): design matrix of matches with key1, key2, timestamp data
-      y (numpy.ndarray or pandas DataFrame): vector of match outcomes, where 1 denotes player key1 won
+      X (np.ndarray or pd.DataFrame): design matrix of matches with key1, key2, timestamp data
+      y (np.ndarray or pd.DataFrame): vector of match outcomes, where 1 denotes player key1 won
       incremental_fit (bool): if false, subsequent calls to fit refit the model and discard old ratings.
         If True, else the model's ratings may be incrementally updated with (new) training data.
         When fitting incrementally, ensure that all matches for any player are monotonically
         increasing in time.
     Returns:
-      EloEstimator: this object
+      EloEstimator: self
     """
     if type(X) is pd.DataFrame:
       if self._can_transform_dataframe:
@@ -429,17 +455,17 @@ class RatingEstimator(BaseEstimator, ClassifierMixin):
 
     This method may be used after the model has been fit to convert a design matrix of
     player identifiers into numerical quantities at either historical times or future times.
-    It should be preferred to predict_proba when historical as-of probabilities are desired
+    It should be preferred to `predict_proba` when historical as-of probabilities are desired
     in which the match outcome is known but the player ratings (or victory probabilities
     estimated thereby) immediately prior to the match are desired for model backtesting or
-    training use cases. The method predict_proba will only return probabilities for strict
+    training use cases. The method `predict_proba` will only return probabilities for strict
     future matches, and is not suitable for historical as-of predictions.
 
     Args:
       X (numpy.ndarray or pandas DataFrame): design matrix of matches with key1, key2, timestamp data
       output_type (string): either 'prob' or 'rating' to specify the type of transformation
-      strict_past_data (bool): if true, ensure no future data are returned if the
-        provided timestamp exactly matches a match timestamp
+      strict_past_data (bool): if True, ensure no future data are returned if the
+        provided timestamp exactly matches a match timestamp (default: True)
 
     Returns:
       An ndarry or pandas Series of transformed ratings or probabilities.
