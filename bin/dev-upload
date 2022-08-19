@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# After running, verify the uploaded package is installable:
+#   v=venv_$(date)
+#   pip3 -m venv "$v"
+#   source "$v/bin/activate"
+#   pip3 install
+#   pip install --index-url https://test.pypi.org/pypi/ --extra-index-url https://pypi.org/simple skelo
 
 source $(dirname $0)/../dev
 
