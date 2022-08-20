@@ -1,7 +1,7 @@
 # skelo
 
 <p align="center">
-<a href="https://github.com/mbhynes/skelo/actions"><img alt="Tests" src="https://github.com/mbhynes/skelo/workflows/Test/badge.svg"></a>
+<a href="https://github.com/mbhynes/skelo/actions"><img alt="Tests" src="https://github.com/mbhynes/skelo/workflows/Tests/badge.svg"></a>
 <a href="https://skelo.readthedocs.io/en/stable/?badge=stable"><img alt="Docs" src="https://readthedocs.org/projects/skelo/badge/?version=stable"></a>
 <a href="https://pypi.org/project/skelo/"><img alt="PyPI" src="https://img.shields.io/pypi/v/skelo"></a>
 </p>
