@@ -2,7 +2,7 @@
 
 An implementation of the [Elo](https://en.wikipedia.org/wiki/Elo_rating_system) and [Glicko2](https://en.wikipedia.org/wiki/Glicko_rating_system) rating systems with a [scikit-learn](https://scikit-learn.org/stable/)-compatible interface.
 
-The `skelo <https://pypi.org/project/skelo/>`_ package is a simple implementation suitable for small-scale rating systems that fit into memory on a single machine.
+The [skelo](https://pypi.org/project/skelo/) package is a simple implementation suitable for small-scale rating systems that fit into memory on a single machine.
 It's intended to provide a convenient API for creating Elo/Glicko ratings in a data science & analytics workflow for small games on the scale thousands of players and millions of matches, primarily as a means of feature transformation in other `sklearn` pipelines or benchmarking classifier accuracy.
 
 ## Motivation
