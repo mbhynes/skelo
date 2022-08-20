@@ -28,7 +28,7 @@ import glicko2
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 
-from skelo.model import RatingModel, RatingEstimator
+from skelo.model.base import RatingModel, RatingEstimator
 
 
 logger = logging.getLogger(__name__)

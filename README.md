@@ -25,6 +25,12 @@ Install via the PyPI package [skelo](https://pypi.org/project/skelo/) using pip:
 pip3 install skelo
 ```
 
+Alternatively, a bleeding edge release is available from GitHub directly:
+```python
+pip3 install git+https://github.com/mbhynes/skelo.git
+```
+
+
 Further reference information on the API is hosted on [skelo.readthedocs.io](https://skelo.readthedocs.io/en/latest/).
 
 ## Quickstart

@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-#
-# After running, verify the uploaded package is installable:
-#   v=venv_$(date '+%s')
-#   pip3 -m venv "$v"
-#   source "$v/bin/activate"
-#   pip install --index-url https://test.pypi.org/pypi/ --extra-index-url https://pypi.org/simple skelo
 
 source $(dirname $0)/../dev
 
@@ -33,7 +27,7 @@ python3 -m twine upload --repository "$repository" dist/* $@
 if [[ "$repository" == "testpypi" ]]; then
   $ROOT_DIR/.venv/bin/deactivate || die "Failed"
   v=$(mktemp -d) || die "Failed to create temporary directory"
-  pip3 -m venv "$v"
+  python3 -m venv "$v"
   source "$v/bin/activate" || die "Failed to activate venv from: $v"
   pip3 install \
     --index-url https://test.pypi.org/pypi/ \

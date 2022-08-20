@@ -1,11 +1,13 @@
 import setuptools
 
+import skelo
+
 with open("README.md", "r") as fh:
   long_description = fh.read()
 
 setuptools.setup(
   name="skelo",
-  version="0.1.2",
+  version=skelo.__version__,
   author="Michael B Hynes",
   author_email="mike.hynes.rhymes@gmail.com",
   description="A scikit-learn interface to the Elo and Glicko2 rating systems",
