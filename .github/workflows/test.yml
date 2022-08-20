@@ -1,0 +1,31 @@
+name: Tests
+on: 
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+    
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Python3
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3
+          cache: 'pip'
+
+      - name: Dependencies
+        run: "./dev up"
+
+      - name: Unit Tests
+        run: "./dev test -vv"

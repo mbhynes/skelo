@@ -25,10 +25,11 @@ python3 -m twine upload --repository "$repository" dist/* $@
 
 # Test that the package can be installed correctly from the test pypi repository
 if [[ "$repository" == "testpypi" ]]; then
-  $ROOT_DIR/.venv/bin/deactivate || die "Failed"
+  deactivate || die "Failed to deactivate current venv"
   v=$(mktemp -d) || die "Failed to create temporary directory"
   python3 -m venv "$v"
   source "$v/bin/activate" || die "Failed to activate venv from: $v"
+  log "\n\nInstalling $PACKAGE_NAME to virtualenv: $v"
   pip3 install \
     --index-url https://test.pypi.org/pypi/ \
     --extra-index-url https://pypi.org/simple \
