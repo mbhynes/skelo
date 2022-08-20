@@ -11,7 +11,7 @@ setuptools.setup(
   description="A scikit-learn interface to the Elo and Glicko2 rating systems",
   long_description=long_description,
   long_description_content_type="text/markdown",
-  url="https://skelo.readthedocs.io/en/latest/",
+  url="https://github.com/mbhynes/skelo",
   packages=setuptools.find_packages(),
   classifiers=[
     "Programming Language :: Python :: 3",
