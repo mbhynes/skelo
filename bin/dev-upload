@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
+#
+# After running, verify the uploaded package is installable:
+#   v=venv_$(date '+%s')
+#   pip3 -m venv "$v"
+#   source "$v/bin/activate"
+#   pip install --index-url https://test.pypi.org/pypi/ --extra-index-url https://pypi.org/simple skelo
 
 source $(dirname $0)/../dev
 
 REQUIRES=(ROOT_DIR)
 check_requires ${REQUIRES[@]}
+
+PACKAGE_NAME=$(basename "$ROOT_DIR")
 
 python3 -m venv .venv
 source $ROOT_DIR/.venv/bin/activate || die "Could not source the venv in $PWD/.venv"
@@ -18,5 +26,19 @@ else
   repository=pypi
 fi
 
+log "\n\nUploading package to $repository"
 python3 -m twine upload --repository "$repository" dist/* $@
+
+# Test that the package can be installed correctly from the test pypi repository
+if [[ "$repository" == "testpypi" ]]; then
+  $ROOT_DIR/.venv/bin/deactivate || die "Failed"
+  v=$(mktemp -d) || die "Failed to create temporary directory"
+  pip3 -m venv "$v"
+  source "$v/bin/activate" || die "Failed to activate venv from: $v"
+  pip3 install \
+    --index-url https://test.pypi.org/pypi/ \
+    --extra-index-url https://pypi.org/simple \
+    "$PACKAGE_NAME"
+fi
+
 exit $?
