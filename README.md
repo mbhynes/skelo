@@ -1,5 +1,11 @@
 # skelo
 
+<p align="center">
+<a href="https://github.com/mbhynes/skelo/actions"><img alt="Tests" src="https://github.com/mbhynes/skelo/workflows/Test/badge.svg"></a>
+<a href="https://skelo.readthedocs.io/en/stable/?badge=stable"><img alt="Docs" src="https://readthedocs.org/projects/skelo/badge/?version=stable"></a>
+<a href="https://pypi.org/project/skelo/"><img alt="PyPI" src="https://img.shields.io/pypi/v/skelo"></a>
+</p>
+
 An implementation of the [Elo](https://en.wikipedia.org/wiki/Elo_rating_system) and [Glicko2](https://en.wikipedia.org/wiki/Glicko_rating_system) rating systems with a [scikit-learn](https://scikit-learn.org/stable/)-compatible interface.
 
 The [skelo](https://pypi.org/project/skelo/) package is a simple implementation suitable for small-scale rating systems that fit into memory on a single machine.
