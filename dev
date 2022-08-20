@@ -35,8 +35,7 @@ check_requires() {
 export_env() {
   git_branch="$(git branch --show)"
   if [ -z "$git_branch" ]; then
-    die "HEAD is not attached. Please checkout a valid branch." 1>&2
-    exit 1
+    error "HEAD is not attached; no git_branch is available."
   fi
   export ROOT_DIR=$(dirname $SCRIPT_NAME)
   export TARGET_ENV="$git_branch"
