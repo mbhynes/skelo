@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'skelo'
 copyright = '2022, Michael B Hynes'
 author = 'Michael B Hynes'
-from skelo import __version__ as release
+release = "0.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
