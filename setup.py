@@ -22,7 +22,7 @@ setuptools.setup(
   python_requires='>=3',
   install_requires=[
     "numpy",
-    "sklearn",
+    "scikit-learn",
     "pandas",
     "glicko2>=2",
   ],
