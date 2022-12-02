@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="skelo",
-  version="0.1.3",
+  version="0.1.4",
   author="Michael B Hynes",
   author_email="mike.hynes.rhymes@gmail.com",
   description="A scikit-learn interface to the Elo and Glicko2 rating systems",
