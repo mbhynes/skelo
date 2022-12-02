@@ -31,6 +31,7 @@ if [[ "$repository" == "testpypi" ]]; then
   source "$v/bin/activate" || die "Failed to activate venv from: $v"
   log "\n\nInstalling $PACKAGE_NAME to virtualenv: $v"
   pip3 install \
+    --no-cache-dir \
     --index-url https://test.pypi.org/pypi/ \
     --extra-index-url https://pypi.org/simple \
     "$PACKAGE_NAME"
