@@ -1,5 +1,5 @@
 numpy
-sklearn
+scikit-learn
 pandas
 pytest
 glicko2
